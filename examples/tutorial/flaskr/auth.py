@@ -1,11 +1,14 @@
-import os
+
 import functools
 
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, current_app
+from flask import (
+    Blueprint, flash, g, redirect, render_template,
+    request, session, url_for
+)
 from werkzeug.security import check_password_hash, generate_password_hash
-from werkzeug.utils import secure_filename
 
 from .models import db, User
+from .uploads import save_image
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -37,6 +40,7 @@ def register():
         password = request.form["password"]
         avatar_file = request.files.get("avatar")
         error = None
+        avatar_filename = None
 
         if not username:
             error = "O nome de usuário é obrigatório."
@@ -45,21 +49,11 @@ def register():
         elif User.query.filter_by(username=username).first() is not None:
             error = f"O usuário {username} já está cadastrado."
 
-        avatar_filename = None
-
         if error is None and avatar_file and avatar_file.filename:
-            safe_name = secure_filename(avatar_file.filename)
-
-            if safe_name:
-                import uuid
-                extension = os.path.splitext(safe_name)[1]
-                avatar_filename = f"{uuid.uuid4().hex}{extension}"
-
-                upload_folder = os.path.join(
-                    current_app.root_path, "static", "uploads"
-                )
-                os.makedirs(upload_folder, exist_ok=True)
-                avatar_file.save(os.path.join(upload_folder, avatar_filename))
+            try:
+                avatar_filename = save_image(avatar_file)
+            except ValueError as e:
+                error = str(e)
 
         if error is None:
             user = User(

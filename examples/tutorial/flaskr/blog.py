@@ -1,37 +1,15 @@
-import os
-import uuid
 
 from flask import (
     Blueprint, flash, g, redirect, render_template,
-    request, url_for, current_app
+    request, url_for
 )
 from werkzeug.exceptions import abort
-from werkzeug.utils import secure_filename
 
+from .uploads import save_image
 from .auth import login_required
 from .models import db, Post
 
 bp = Blueprint("blog", __name__)
-
-
-def save_image(file):
-    if not file or not file.filename:
-        return None
-
-    safe_name = secure_filename(file.filename)
-    if not safe_name:
-        return None
-
-    extension = os.path.splitext(safe_name)[1].lower()
-    filename = f"{uuid.uuid4().hex}{extension}"
-
-    upload_folder = os.path.join(
-        current_app.root_path, "static", "uploads"
-    )
-    os.makedirs(upload_folder, exist_ok=True)
-    file.save(os.path.join(upload_folder, filename))
-
-    return filename
 
 
 def get_post(id, check_author=True):
@@ -67,7 +45,11 @@ def create():
         if error:
             flash(error)
         else:
-            image_filename = save_image(image_file)
+            try:
+                image_filename = save_image(image_file)
+            except ValueError as e:
+                flash(str(e))
+                return render_template("blog/create.html"), 400
 
             post = Post(
                 title=title,
@@ -99,13 +81,20 @@ def update(id):
         if error:
             flash(error)
         else:
-            post.title = title
-            post.body = body
-
             if image_file and image_file.filename:
-                new_image = save_image(image_file)
+                try:
+                    new_image = save_image(image_file)
+                except ValueError as e:
+                    flash(str(e))
+                    return render_template(
+                        "blog/update.html", post=post
+                    ), 400
+
                 if new_image:
                     post.imagem_post = new_image
+
+            post.title = title
+            post.body = body
 
             db.session.commit()
             return redirect(url_for("blog.index"))
