@@ -1,29 +1,34 @@
-import sqlite3
 
-import pytest
-
-from flaskr.db import get_db
+from flaskr.models import db, User, Post
 
 
-def test_get_close_db(app):
+def test_database_tables_exist(app):
     with app.app_context():
-        db = get_db()
-        assert db is get_db()
-
-    with pytest.raises(sqlite3.ProgrammingError) as e:
-        db.execute("SELECT 1")
-
-    assert "closed" in str(e.value)
+        assert db.session.query(User).count() == 2
+        assert db.session.query(Post).count() == 1
 
 
-def test_init_db_command(runner, monkeypatch):
-    class Recorder:
-        called = False
+def test_post_relationship(app):
+    with app.app_context():
+        post = db.session.get(Post, 1)
 
-    def fake_init_db():
-        Recorder.called = True
+        assert post is not None
+        assert post.author is not None
+        assert post.author.username == "test"
+        assert post in post.author.posts
 
-    monkeypatch.setattr("flaskr.db.init_db", fake_init_db)
-    result = runner.invoke(args=["init-db"])
-    assert "Initialized" in result.output
-    assert Recorder.called
+
+def test_create_user(app):
+    with app.app_context():
+        user = User(
+            username="novo_usuario",
+            password="senha_teste",
+        )
+        db.session.add(user)
+        db.session.commit()
+
+        encontrado = User.query.filter_by(
+            username="novo_usuario"
+        ).first()
+
+        assert encontrado is not None

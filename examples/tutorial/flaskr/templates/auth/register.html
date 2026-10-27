@@ -1,15 +1,68 @@
 {% extends 'base.html' %}
 
+{% block title %}Criar conta{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}Register{% endblock %}</h1>
+  <h1>Criar conta</h1>
+  <p class="text-muted">Preencha os dados para se cadastrar.</p>
 {% endblock %}
 
 {% block content %}
-  <form method="post">
-    <label for="username">Username</label>
-    <input name="username" id="username" required>
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required>
-    <input type="submit" value="Register">
-  </form>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="username" class="form-label">
+                Nome de usuário
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                name="username"
+                id="username"
+                value="{{ request.form.get('username', '') }}"
+                maxlength="80"
+                required
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input
+                type="password"
+                class="form-control"
+                name="password"
+                id="password"
+                required
+              >
+            </div>
+
+            <div class="mb-4">
+              <label for="avatar" class="form-label">
+                Foto de perfil (opcional)
+              </label>
+              <input
+                type="file"
+                class="form-control"
+                name="avatar"
+                id="avatar"
+                accept="image/*"
+              >
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              Criar conta
+            </button>
+          </form>
+
+          <p class="text-center mt-3 mb-0">
+            Já tem uma conta?
+            <a href="{{ url_for('auth.login') }}">Entrar</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

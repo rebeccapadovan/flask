@@ -1,28 +1,75 @@
 {% extends 'base.html' %}
 
+{% block title %}Publicações{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}Posts{% endblock %}</h1>
-  {% if g.user %}
-    <a class="action" href="{{ url_for('blog.create') }}">New</a>
-  {% endif %}
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <h1 class="mb-0">Publicações</h1>
+
+    {% if g.user %}
+      <a class="btn btn-primary" href="{{ url_for('blog.create') }}">
+        Criar publicação
+      </a>
+    {% endif %}
+  </div>
 {% endblock %}
 
 {% block content %}
-  {% for post in posts %}
-    <article class="post">
-      <header>
-        <div>
-          <h1>{{ post['title'] }}</h1>
-          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+  <div class="row g-4">
+    {% for post in posts %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <article class="card h-100 shadow-sm">
+          {% if post.imagem_post %}
+            <img
+              src="{{ url_for('static', filename='uploads/' + post.imagem_post) }}"
+              class="card-img-top"
+              alt="Imagem da publicação"
+              style="height: 220px; object-fit: cover;"
+            >
+          {% endif %}
+
+          <div class="card-body">
+            <h2 class="card-title h5">{{ post.title }}</h2>
+
+            <p class="text-muted small">
+              Por {{ post.author.username }}
+              {% if post.created %}
+                · {{ post.created.strftime('%d/%m/%Y') }}
+              {% endif %}
+            </p>
+
+            <p class="card-text">{{ post.body }}</p>
+          </div>
+
+          {% if g.user and g.user.id == post.author_id %}
+            <div class="card-footer bg-white border-0">
+              <a
+                class="btn btn-outline-primary btn-sm"
+                href="{{ url_for('blog.update', id=post.id) }}"
+              >
+                Editar
+              </a>
+
+              <form
+                method="post"
+                action="{{ url_for('blog.delete', id=post.id) }}"
+                class="d-inline"
+                onsubmit="return confirm('Deseja excluir esta publicação?');"
+              >
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                  Excluir
+                </button>
+              </form>
+            </div>
+          {% endif %}
+        </article>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-secondary">
+          Ainda não existem publicações. Que tal criar a primeira?
         </div>
-        {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
-        {% endif %}
-      </header>
-      <p class="body">{{ post['body'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-  {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
 {% endblock %}

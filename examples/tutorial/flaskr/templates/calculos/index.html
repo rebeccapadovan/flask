@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block header %}
+  <h1 class="mb-4">Painel de Cálculos</h1>
+{% endblock %}
+
+{% block content %}
+
+{% if erro %}
+  <div class="alert alert-danger" role="alert">
+    {{ erro }}
+  </div>
+{% endif %}
+
+  <div class="row g-4">
+
+    <!-- Calculadora de IRPF -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h4">Calculadora de IRPF</h2>
+          <p class="text-body-secondary">
+            Estime o imposto mensal com base no salário informado.
+          </p>
+
+          <form method="post">
+            <input type="hidden" name="tipo_calculo" value="irpf">
+
+            <div class="mb-3">
+              <label for="salario_irpf" class="form-label">
+                Salário mensal (R$)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                id="salario_irpf"
+                name="salario"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Calcular IRPF
+            </button>
+          </form>
+
+          {% if tipo_calculo == "irpf" and irpf is not none %}
+            <div class="alert alert-info mt-3 mb-0">
+              <strong>IRPF mensal estimado:</strong>
+              R$ {{ "%.2f"|format(irpf) }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculadora de 13º salário -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h4">Calculadora de 13º salário</h2>
+          <p class="text-body-secondary">
+            Calcule o valor proporcional aos meses trabalhados.
+          </p>
+
+          <form method="post">
+            <input type="hidden" name="tipo_calculo" value="decimo_terceiro">
+
+            <div class="mb-3">
+              <label for="salario_13" class="form-label">
+                Salário-base mensal (R$)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                id="salario_13"
+                name="salario"
+                required
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="meses" class="form-label">
+                Meses trabalhados no ano
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="12"
+                class="form-control"
+                id="meses"
+                name="meses"
+                required
+              >
+            </div>
+
+            <button type="submit" class="btn btn-success">
+              Calcular 13º
+            </button>
+          </form>
+
+          {% if tipo_calculo == "decimo_terceiro" and decimo_terceiro is not none %}
+            <div class="alert alert-success mt-3 mb-0">
+              <strong>13º proporcional estimado:</strong>
+              R$ {{ "%.2f"|format(decimo_terceiro) }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}

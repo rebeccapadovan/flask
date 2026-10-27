@@ -1,15 +1,60 @@
 {% extends 'base.html' %}
 
+{% block title %}Criar publicação{% endblock %}
+
 {% block header %}
-  <h1>{% block title %}New Post{% endblock %}</h1>
+  <h1>Nova publicação</h1>
+  <p class="text-muted">Compartilhe uma ideia com a comunidade.</p>
 {% endblock %}
 
 {% block content %}
-  <form method="post">
-    <label for="title">Title</label>
-    <input name="title" id="title" value="{{ request.form['title'] }}" required>
-    <label for="body">Body</label>
-    <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
-    <input type="submit" value="Save">
-  </form>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="title" class="form-label">Título</label>
+          <input
+            type="text"
+            class="form-control"
+            name="title"
+            id="title"
+            value="{{ request.form.get('title', '') }}"
+            maxlength="200"
+            required
+          >
+        </div>
+
+        <div class="mb-3">
+          <label for="body" class="form-label">Conteúdo</label>
+          <textarea
+            class="form-control"
+            name="body"
+            id="body"
+            rows="6"
+          >{{ request.form.get('body', '') }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="imagem_post" class="form-label">
+            Imagem da publicação (opcional)
+          </label>
+          <input
+            type="file"
+            class="form-control"
+            name="imagem_post"
+            id="imagem_post"
+            accept="image/*"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          Salvar publicação
+        </button>
+
+        <a href="{{ url_for('blog.index') }}" class="btn btn-outline-secondary">
+          Cancelar
+        </a>
+      </form>
+    </div>
+  </div>
 {% endblock %}

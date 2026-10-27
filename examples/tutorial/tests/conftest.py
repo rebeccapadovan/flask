@@ -1,46 +1,59 @@
-import os
-import tempfile
-
 import pytest
 
 from flaskr import create_app
-from flaskr.db import get_db
-from flaskr.db import init_db
-
-# read in SQL for populating test data
-with open(os.path.join(os.path.dirname(__file__), "data.sql"), "rb") as f:
-    _data_sql = f.read().decode("utf8")
+from flaskr.models import db, User, Post
+from werkzeug.security import generate_password_hash
 
 
 @pytest.fixture
-def app():
-    """Create and configure a new app instance for each test."""
-    # create a temporary file to isolate the database for each test
-    db_fd, db_path = tempfile.mkstemp()
-    # create the app with common test config
-    app = create_app({"TESTING": True, "DATABASE": db_path})
+def app(tmp_path):
+    """Cria um aplicativo e um banco isolado para cada teste."""
+    database_path = tmp_path / "test.sqlite"
 
-    # create the database and load test data
+    app = create_app({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database_path.as_posix()}",
+        "SECRET_KEY": "test",
+    })
+
     with app.app_context():
-        init_db()
-        get_db().executescript(_data_sql)
+        db.drop_all()
+        db.create_all()
+
+        user = User(
+            username="test",
+            password=generate_password_hash("test"),
+        )
+        other = User(
+            username="other",
+            password=generate_password_hash("test"),
+        )
+
+        db.session.add_all([user, other])
+        db.session.flush()
+
+        post = Post(
+            title="test title",
+            body="test\nbody",
+            author_id=user.id,
+        )
+        db.session.add(post)
+        db.session.commit()
 
     yield app
 
-    # close and remove the temporary database
-    os.close(db_fd)
-    os.unlink(db_path)
+    with app.app_context():
+        db.session.remove()
+        db.engine.dispose()
 
 
 @pytest.fixture
 def client(app):
-    """A test client for the app."""
     return app.test_client()
 
 
 @pytest.fixture
 def runner(app):
-    """A test runner for the app's Click commands."""
     return app.test_cli_runner()
 
 
@@ -50,7 +63,8 @@ class AuthActions:
 
     def login(self, username="test", password="test"):
         return self._client.post(
-            "/auth/login", data={"username": username, "password": password}
+            "/auth/login",
+            data={"username": username, "password": password},
         )
 
     def logout(self):
